@@ -1,6 +1,8 @@
 # Our extra ignored files
 .idea
 
+# ignore for now
+data_contains_everything
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
