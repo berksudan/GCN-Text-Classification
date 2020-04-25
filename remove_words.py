@@ -1,13 +1,14 @@
-import nltk
-from nltk.corpus import stopwords
-import sys
-import re
+from collections import Counter
+from typing import List, Set
+from os.path import exists
+from os import makedirs
+from shutil import rmtree
 
-def clean_str(string):
+def clean_str(a_str:str) -> str:
     """
-        Tokenization/string cleaning for all datasets except for SST.
-        Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
-        """
+    Tokenization/string cleaning for all datasets except for SST.
+    Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+    """
     string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
     string = re.sub(r"\'s", " \'s", string)
     string = re.sub(r"\'ve", " \'ve", string)
@@ -23,73 +24,101 @@ def clean_str(string):
     string = re.sub(r"\s{2,}", " ", string)
     return string.strip().lower()
 
-if len(sys.argv) != 2:
-	sys.exit("Unknown Command: Run python remove_words.py <data_set>")
 
-dataset = sys.argv[1]
+def check_data_set(data_set_name: str, all_data_set_names: List[str]) -> None:
+    if data_set_name not in all_data_set_names:
+        raise AttributeError("Wrong data-set name, given:%r, however expected:%r" % (data_set_name, all_data_set_names))
 
-# Load stopwords
-stop_words = set(stopwords.words('english'))
 
-doc_content_list = []
-try:
-    f = open('data/corpus/' + dataset + '.txt', 'rb')
-except:
-    sys.exit("Data set could not be loaded!")
-
-for line in f.readlines():
-    doc_content_list.append(line.strip().decode('latin1'))
-f.close()
-
-word_freq = {}  # to remove rare words
-
-for doc_content in doc_content_list:
-    temp = clean_str(doc_content)
-    words = temp.split()
-    for word in words:
-        if word in word_freq:
-            word_freq[word] += 1
+def create_dir(dir_path: str, overwrite: bool) -> None:
+    if exists(dir_path):
+        if overwrite:
+            rmtree(dir_path)
+            makedirs(dir_path)
         else:
-            word_freq[word] = 1
+            print('[WARN] directory:%r already exists, not overwritten.' % dir_path)
+    else:
+        makedirs(dir_path)
 
-clean_docs = []
-for doc_content in doc_content_list:
-    temp = clean_str(doc_content)
-    words = temp.split()
-    doc_words = []
-    for word in words:
-        # word not in stop_words and word_freq[word] >= 5
-        if dataset == 'mr':
-            doc_words.append(word)
-        elif word not in stop_words and word_freq[word] >= 5:
-            doc_words.append(word)
 
-    doc_str = ' '.join(doc_words).strip()
-    clean_docs.append(doc_str)
+def retrieve_stop_words(language: str = 'english') -> Set[str]:
+    from nltk.corpus import stopwords
+    return set(stopwords.words(language))
 
-clean_corpus_str = '\n'.join(clean_docs)
 
-f = open('data/corpus/' + dataset + '.clean.txt', 'w')
-f.write(clean_corpus_str)
-f.close()
+def extract_word_counts(lines_of_words: List[List[str]]) -> Counter:
+    w_counts = Counter()
+    for words in lines_of_words:
+        w_counts.update(words)
+    return w_counts
 
-min_len = 10000
-aver_len = 0
-max_len = 0
 
-f = open('data/corpus/' + dataset + '.clean.txt', 'r')
-lines = f.readlines()
-for line in lines:
-    line = line.strip()
-    temp = line.split()
-    aver_len = aver_len + len(temp)
-    if len(temp) < min_len:
-        min_len = len(temp)
-    if len(temp) > max_len:
-        max_len = len(temp)
-f.close()
-aver_len = 1.0 * aver_len / len(lines)
-print('min_len : ' + str(min_len))
-print('max_len : ' + str(max_len))
-print('average_len : ' + str(aver_len))
+def remove_stop_words(lines_of_words: List[List[str]], stop_words: Set[str]) -> List[List[str]]:
+    """ If a word is in stop-words, then remove it"""
+    return [[word for word in line if word not in stop_words] for line in lines_of_words]
 
+
+def remove_rare_words(lines_of_words: List[List[str]], word_counts: Counter, rare_count: int) -> List[List[str]]:
+    """ If a word is rare, then remove it"""
+    return [[word for word in line if word_counts[word] >= rare_count] for line in lines_of_words]
+
+
+def glue_lines(lines_of_words: List[List[str]], glue_str: str, with_strip: bool) -> List[str]:
+    if with_strip:
+        return [glue_str.join(lines).strip() for lines in lines_of_words]
+    else:
+        return [glue_str.join(lines) for lines in lines_of_words]
+
+
+def main(data_set: str, rare_count: int):
+    # TODO #1: change '../data/corpus/' + data_set + '.txt' to more readable format
+    # TODO #2: handle comment blocks at the and of the module
+
+    with open('../data/corpus/' + data_set + '.txt', 'rb') as f:
+        lines_of_words = [clean_str(line.strip().decode('latin1')).split() for line in f.readlines()]
+
+    check_data_set(data_set_name=data_set, all_data_set_names=DATA_SETS)
+    word_counts = extract_word_counts(lines_of_words=lines_of_words)
+    stop_words = retrieve_stop_words(language='english')
+    if data_set != 'mr':  # If data-set is 'mr', don't remove stop and rare words
+        lines_of_words = remove_stop_words(lines_of_words, stop_words=stop_words)
+        lines_of_words = remove_rare_words(lines_of_words, word_counts=word_counts, rare_count=rare_count)
+    lines_of_words = glue_lines(lines_of_words=lines_of_words, glue_str=' ', with_strip=True)
+    clean_corpus_str = '\n'.join(lines_of_words) # TODO: change with writelines version
+    with open('../data/corpus/' + data_set + '.alternative.clean.txt', 'w') as f:
+        f.write(clean_corpus_str)
+
+
+if __name__ == '__main__':
+    DATA_SETS = ['20ng', 'R8', 'R52', 'ohsumed', 'mr']
+    PARAMETERS = {
+        'data_set': 'mr',
+        'rare_count': 5
+    }
+    main(**PARAMETERS)
+
+# Read Word Vectors
+# from utils.utils import  loadWord2Vec
+# word_vector_file = 'data/glove.6B/glove.6B.200d.txt'
+# vocab, embd, word_vector_map = loadWord2Vec(word_vector_file)
+# word_embeddings_dim = len(embd[0])
+# ######################################################
+# min_len = 10000
+# aver_len = 0
+# max_len = 0
+#
+# with open('../data/corpus/' + data_set + '.clean.txt', 'r') as f:
+#     lines = f.readlines()
+#     for line in lines:
+#         line = line.strip()
+#         temp = line.split()
+#         aver_len = aver_len + len(temp)
+#         if len(temp) < min_len:
+#             min_len = len(temp)
+#         if len(temp) > max_len:
+#             max_len = len(temp)
+#
+# aver_len = 1.0 * aver_len / len(lines)
+# print('Min_len : ' + str(min_len))
+# print('Max_len : ' + str(max_len))
+# print('Average_len : ' + str(aver_len))
