@@ -1,102 +1,71 @@
 import random
-import shutil
-from typing import List, Tuple, Any
-import os
+from typing import List, Tuple
+
+from clean_data import check_data_set  # todo: check_dataset to commons
+from file_ops_utils import create_dir, write_iterable_to_file, check_paths_exists
 
 
-def check_data_set(data_set_name: str, all_data_set_names: List[str]) -> None:  # TODO: make it common
-    if data_set_name not in all_data_set_names:
-        raise AttributeError("Wrong data-set name, given:%r, however expected:%r" % (data_set_name, all_data_set_names))
+def load_corpus_meta(corpus_meta_path: str) -> Tuple[List[str], List[str], List[str]]:
+    all_doc_meta_list = [line.strip() for line in open(corpus_meta_path, 'r').readlines()]
+    train_doc_meta_list = [doc_meta for doc_meta in all_doc_meta_list if doc_meta.split('\t')[1].endswith('train')]
+    test_doc_meta_list = [doc_meta for doc_meta in all_doc_meta_list if doc_meta.split('\t')[1].endswith('test')]
+    return all_doc_meta_list, train_doc_meta_list, test_doc_meta_list
 
 
-def create_dir(dir_path: str, overwrite: bool) -> None:  # TODO: make it common
-    if os.path.exists(dir_path):
-        if overwrite:
-            shutil.rmtree(dir_path)
-            os.makedirs(dir_path)
-        else:
-            print('[WARN] directory:%r already exists, not overwritten.' % dir_path)
-    else:
-        os.makedirs(dir_path)
+def shuffle(ds_name: str):
+    ds_corpus = CORPUS_DIR + ds_name + '.txt'
+    ds_corpus_meta = CORPUS_META_DIR + ds_name + '.meta'
+    ds_corpus_cleaned = CORPUS_CLEANED_DIR + ds_name + '.txt'
 
-
-def check_paths_exists(*paths: str):  # TODO: make it common
-    for path in paths:
-        if not os.path.exists(path):
-            raise FileNotFoundError('Path: {path} is not found.'.format(path=path))
-
-
-def write_list_to_file(a_list: List[Any], file_path: str, file_mode: str = 'w'):  # TODO: make it common
-    with open(file_path, file_mode) as f:
-        f.writelines("%s\n" % item for item in a_list)
-
-
-def load_corpus_info(corpus_info_path: str) -> Tuple[List[str], List[str], List[str]]:
-    all_doc_info_list = [line.strip() for line in open(corpus_info_path, 'r').readlines()]
-    train_doc_info_list = [doc_info for doc_info in all_doc_info_list if doc_info.split('\t')[1].endswith('train')]
-    test_doc_info_list = [doc_info for doc_info in all_doc_info_list if doc_info.split('\t')[1].endswith('test')]
-    return all_doc_info_list, train_doc_info_list, test_doc_info_list
-
-
-def shuffle():
-    # User Parameters
-    data_set_name = '20ng'
-    data_set_extension = 'txt'
-
-    # Derived Parameters
-    ds = data_set_name + '.' + data_set_extension
-    ds_corpus = CORPUS_DIR + ds
-    ds_corpus_info = CORPUS_INFO_DIR + ds
-    ds_corpus_cleaned = CORPUS_CLEANED_DIR + ds
-
-    ds_corpus_shuffled = CORPUS_SHUFFLED_DIR + ds
-    ds_corpus_shuffled_train_idx = CORPUS_SHUFFLED_INDEX_DIR + data_set_name + '.train'
-    ds_corpus_shuffled_test_idx = CORPUS_SHUFFLED_INDEX_DIR + data_set_name + '.test'
-    ds_corpus_shuffled_info = CORPUS_SHUFFLED_INFO_DIR + ds
+    ds_corpus_shuffled = CORPUS_SHUFFLED_DIR + ds_name + '.txt'
+    ds_corpus_shuffled_train_idx = CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.train'
+    ds_corpus_shuffled_test_idx = CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.test'
+    ds_corpus_shuffled_meta = CORPUS_SHUFFLED_META_DIR + ds_name + '.meta'
 
     # Checkers
-    check_data_set(data_set_name=data_set_name, all_data_set_names=DATA_SETS)
-    check_paths_exists(ds_corpus, ds_corpus_info, ds_corpus_cleaned)
+    check_data_set(data_set_name=ds_name, all_data_set_names=DATA_SETS)
+    check_paths_exists(ds_corpus, ds_corpus_meta, ds_corpus_cleaned)
 
     # Create dirs if not exist
     create_dir(CORPUS_SHUFFLED_DIR, overwrite=False)
-    create_dir(CORPUS_SHUFFLED_INFO_DIR, overwrite=False)
-    create_dir(CORPUS_SHUFFLED_INDEX_DIR, overwrite=False)
+    create_dir(CORPUS_SHUFFLED_META_DIR, overwrite=False)
+    create_dir(CORPUS_SHUFFLED_SPLIT_INDEX_DIR, overwrite=False)
 
-    all_doc_info_list, train_doc_info_list, test_doc_info_list = load_corpus_info(corpus_info_path=ds_corpus_info)
+    all_doc_meta_list, train_doc_meta_list, test_doc_meta_list = load_corpus_meta(corpus_meta_path=ds_corpus_meta)
     cleaned_doc_lines = [line.strip() for line in open(ds_corpus_cleaned, 'r')]
 
     # Shuffle train ids and write to file
-    train_doc_info_ids = [all_doc_info_list.index(train_doc_info) for train_doc_info in train_doc_info_list]
-    random.shuffle(train_doc_info_ids)
-    write_list_to_file(a_list=train_doc_info_ids, file_path=ds_corpus_shuffled_train_idx, file_mode='w')
+    train_doc_meta_ids = [all_doc_meta_list.index(train_doc_meta) for train_doc_meta in train_doc_meta_list]
+    random.shuffle(train_doc_meta_ids)
+    write_iterable_to_file(an_iterable=train_doc_meta_ids, file_path=ds_corpus_shuffled_train_idx, file_mode='w')
 
     # Shuffle test ids and write to file
-    test_doc_info_ids = [all_doc_info_list.index(test_doc_info) for test_doc_info in test_doc_info_list]
-    random.shuffle(test_doc_info_ids)
-    write_list_to_file(a_list=test_doc_info_ids, file_path=ds_corpus_shuffled_test_idx, file_mode='w')
+    test_doc_meta_ids = [all_doc_meta_list.index(test_doc_meta) for test_doc_meta in test_doc_meta_list]
+    random.shuffle(test_doc_meta_ids)
+    write_iterable_to_file(an_iterable=test_doc_meta_ids, file_path=ds_corpus_shuffled_test_idx, file_mode='w')
 
-    all_doc_info_ids = train_doc_info_ids + test_doc_info_ids
-    # Write shuffled info to file
-    shuffled_doc_info_list = [all_doc_info_list[all_doc_info_id] for all_doc_info_id in all_doc_info_ids]
-    write_list_to_file(a_list=shuffled_doc_info_list, file_path=ds_corpus_shuffled_info, file_mode='w')
+    all_doc_meta_ids = train_doc_meta_ids + test_doc_meta_ids
+    # Write shuffled meta to file
+    shuffled_doc_meta_list = [all_doc_meta_list[all_doc_meta_id] for all_doc_meta_id in all_doc_meta_ids]
+    write_iterable_to_file(an_iterable=shuffled_doc_meta_list, file_path=ds_corpus_shuffled_meta, file_mode='w')
 
     # Write shuffled document files to file
-    shuffled_doc_lines = [cleaned_doc_lines[all_doc_info_id] for all_doc_info_id in all_doc_info_ids]
-    write_list_to_file(a_list=shuffled_doc_lines, file_path=ds_corpus_shuffled, file_mode='w')
+    shuffled_doc_lines = [cleaned_doc_lines[all_doc_meta_id] for all_doc_meta_id in all_doc_meta_ids]
+    write_iterable_to_file(an_iterable=shuffled_doc_lines, file_path=ds_corpus_shuffled, file_mode='w')
 
 
 if __name__ == '__main__':
     # Pre-Defined Parameters
     DATA_SETS = ['20ng', 'R8', 'R52', 'ohsumed', 'mr']
     CORPUS_DIR = 'data/corpus/'
-    CORPUS_INFO_DIR = 'data/corpus.info/'
+    CORPUS_META_DIR = 'data/corpus/meta/'
     CORPUS_CLEANED_DIR = 'data/corpus.cleaned/'
     CORPUS_SHUFFLED_DIR = 'data/corpus.shuffled/'
-    CORPUS_SHUFFLED_INDEX_DIR = 'data/corpus.shuffled.index/'
-    CORPUS_SHUFFLED_INFO_DIR = 'data/corpus.shuffled.info/'
+    CORPUS_SHUFFLED_SPLIT_INDEX_DIR = 'data/corpus.shuffled/split_index/'
+    CORPUS_SHUFFLED_META_DIR = 'data/corpus.shuffled/meta/'
 
-    shuffle()
+    for data_set in DATA_SETS:
+        shuffle(ds_name=data_set)
 
 # partial labeled data # fixme: what is the purpose of the code?
 # train_ids = train_ids[:int(0.2 * len(train_ids))]
