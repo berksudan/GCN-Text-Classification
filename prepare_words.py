@@ -6,7 +6,7 @@ from typing import List, Iterable
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from file_ops_utils import write_iterable_to_file, create_dir, check_paths_exists
+from utils.file_ops_utils import write_iterable_to_file, create_dir, check_paths_exists
 
 
 def extract_word_definitions(vocabulary: List[str]) -> List[str]:
