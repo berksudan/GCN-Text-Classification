@@ -1,10 +1,12 @@
-import numpy as np
 import pickle as pkl
+import sys
+import datetime
+from typing import Iterable, Any
+
 import networkx as nx
+import numpy as np
 import scipy.sparse as sp
 from scipy.sparse.linalg.eigen.arpack import eigsh
-import sys
-import re
 
 
 def parse_index_file(filename):
@@ -42,7 +44,7 @@ def load_data(dataset_str):
     :param dataset_str: Dataset name
     :return: All data input files loaded (as well the training/test data).
     """
-    names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
+    names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'adj']
     objects = []
     for i in range(len(names)):
         with open("data/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
@@ -80,12 +82,12 @@ def load_data(dataset_str):
         # Fix citeseer dataset (there are some isolated nodes in the graph)
         # Find isolated nodes, add them as zero-vecs into the right position
         test_idx_range_full = range(
-            min(test_idx_reorder), max(test_idx_reorder)+1)
+            min(test_idx_reorder), max(test_idx_reorder) + 1)
         tx_extended = sp.lil_matrix((len(test_idx_range_full), x.shape[1]))
-        tx_extended[test_idx_range-min(test_idx_range), :] = tx
+        tx_extended[test_idx_range - min(test_idx_range), :] = tx
         tx = tx_extended
         ty_extended = np.zeros((len(test_idx_range_full), y.shape[1]))
-        ty_extended[test_idx_range-min(test_idx_range), :] = ty
+        ty_extended[test_idx_range - min(test_idx_range), :] = ty
         ty = ty_extended
 
     features = sp.vstack((allx, tx)).tolil()
@@ -99,7 +101,7 @@ def load_data(dataset_str):
     idx_test = test_idx_range.tolist()
     # print(idx_test)
     idx_train = range(len(y))
-    idx_val = range(len(y), len(y)+500)
+    idx_val = range(len(y), len(y) + 500)
 
     train_mask = sample_mask(idx_train, labels.shape[0])
     val_mask = sample_mask(idx_val, labels.shape[0])
@@ -180,6 +182,7 @@ def load_corpus(dataset_str):
 
 def sparse_to_tuple(sparse_mx):
     """Convert sparse matrix to tuple representation."""
+
     def to_tuple(mx):
         if not sp.isspmatrix_coo(mx):
             mx = mx.tocoo()
@@ -236,16 +239,16 @@ def construct_feed_dict(features, support, labels, labels_mask, placeholders):
     feed_dict.update({placeholders['num_features_nonzero']: features[1].shape})
     return feed_dict
 
-
-    def chebyshev_polynomials(adj, k):
+def chebyshev_polynomials(adj, k):
     """Calculate Chebyshev polynomials up to order k. Return a list of sparse matrices (tuple representation)."""
+
     print_log("Calculating Chebyshev polynomials up to order {}...".format(k))
 
     adj_normalized = normalize_adj(adj)
     laplacian = sp.eye(adj.shape[0]) - adj_normalized
     largest_eigval, _ = eigsh(laplacian, 1, which='LM')
     scaled_laplacian = (
-        2. / largest_eigval[0]) * laplacian - sp.eye(adj.shape[0])
+                               2. / largest_eigval[0]) * laplacian - sp.eye(adj.shape[0])
 
     t_k = list()
     # t_k.append(sp.eye(adj.shape[0]))
@@ -257,79 +260,28 @@ def construct_feed_dict(features, support, labels, labels_mask, placeholders):
         s_lap = sp.csr_matrix(scaled_lap, copy=True)
         return 2 * s_lap.dot(t_k_minus_one) - t_k_minus_two
 
-    for i in range(2, k+1):
+    for i in range(2, k + 1):
         t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2], scaled_laplacian))
 
     # return sparse_to_tuple(t_k)
     return t_k
 
-
-def loadWord2Vec(filename):
-    """Read Word Vectors"""
-    vocab = []
-    embd = []
-    word_vector_map = {}
-    file = open(filename, 'r')
-    for line in file.readlines():
-        row = line.strip().split(' ')
-        if(len(row) > 2):
-            vocab.append(row[0])
-            vector = row[1:]
-            length = len(vector)
-            for i in range(length):
-                vector[i] = float(vector[i])
-            embd.append(vector)
-            word_vector_map[row[0]] = vector
-    print_log('Loaded Word Vectors!')
-    file.close()
-    return vocab, tour de france, word_vector_map
-
-def clean_str(string):
-    """
-    Tokenization/string cleaning for all datasets except for SST.
-    Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
-    """
-    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
-    string = re.sub(r"\'s", " \'s", string)
-    string = re.sub(r"\'ve", " \'ve", string)
-    string = re.sub(r"n\'t", " n\'t", string)
-    string = re.sub(r"\'re", " \'re", string)
-    string = re.sub(r"\'d", " \'d", string)
-    string = re.sub(r"\'ll", " \'ll", string)
-    string = re.sub(r",", " , ", string)
-    string = re.sub(r"!", " ! ", string)
-    string = re.sub(r"\(", " \( ", string)
-    string = re.sub(r"\)", " \) ", string)
-    string = re.sub(r"\?", " \? ", string)
-    string = re.sub(r"\s{2,}", " ", string)
-    return string.strip().lower()
+def flatten_nested_iterables(iterables_of_iterables: Iterable[Iterable[Any]]) -> Iterable[Any]:
+    return [item for sublist in iterables_of_iterables for item in sublist]
 
 
-import datetime
 def print_log(msg='', end='\n'):
     now = datetime.datetime.now()
     t = str(now.year) + '/' + str(now.month) + '/' + str(now.day) + ' ' \
-      + str(now.hour).zfill(2) + ':' + str(now.minute).zfill(2) + ':' + str(now.second).zfill(2)
+        + str(now.hour).zfill(2) + ':' + str(now.minute).zfill(2) + ':' + str(now.second).zfill(2)
 
     if isinstance(msg, str):
         lines = msg.split('\n')
     else:
         lines = [msg]
-        
+
     for line in lines:
         if line == lines[-1]:
             print('[' + t + '] ' + str(line), end=end)
-        else: 
+        else:
             print('[' + t + '] ' + str(line))
-
-
-
-
-
-
-
-
-
-
-
-
