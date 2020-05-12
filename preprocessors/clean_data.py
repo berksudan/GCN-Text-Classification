@@ -4,6 +4,7 @@ from shutil import rmtree
 from typing import List, Set
 
 from common import extract_word_counts, check_data_set
+from preprocessors.preprocessing_configs import PreProcessingConfigs
 from utils.file_ops import create_dir, write_iterable_to_file, check_paths
 
 
@@ -55,30 +56,24 @@ def glue_lines(lines_of_words: List[List[str]], glue_str: str, with_strip: bool)
         return [glue_str.join(lines) for lines in lines_of_words]
 
 
-def clean_data(data_set_name: str, rare_count: int):
-    check_data_set(data_set_name=data_set_name, all_data_set_names=DATA_SETS)
-    corpus_path = CORPUS_PATH + data_set_name + '.txt'
-    ds_corpus_cleaned = CORPUS_CLEANED_PATH + data_set_name + '.txt'
+def clean_data(ds_name: str, rare_count: int, cfg: PreProcessingConfigs):
+    corpus_path = cfg.CORPUS_DIR + ds_name + cfg.DATA_SET_EXTENSION
+    ds_corpus_cleaned = cfg.CORPUS_CLEANED_DIR + ds_name + cfg.DATA_SET_EXTENSION
 
+    # Checkers
+    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.DATA_SETS)
     check_paths(corpus_path)
-    create_dir(dir_path=CORPUS_CLEANED_PATH, overwrite=False)
+
+    create_dir(dir_path=cfg.CORPUS_CLEANED_DIR, overwrite=False)
     docs_of_words = [clean_str(line.strip().decode('latin1')).split() for line in open(corpus_path, 'rb')]
     word_counts = extract_word_counts(docs_of_words=docs_of_words)
     stop_words = retrieve_stop_words(language='english')
-    if data_set_name != 'mr':  # If data-set is 'mr', don't remove stop and rare words, TODO: why?
+    if ds_name != 'mr':  # If data-set is 'mr', don't remove stop and rare words, TODO: find why
         docs_of_words = remove_stop_words(docs_of_words, stop_words=stop_words)
         docs_of_words = remove_rare_words(docs_of_words, word_counts=word_counts, rare_count=rare_count)
     docs_of_words = glue_lines(lines_of_words=docs_of_words, glue_str=' ', with_strip=True)
 
     write_iterable_to_file(an_iterable=docs_of_words, file_path=ds_corpus_cleaned, file_mode='w')
-    print("======= CLEANED DATA: Removed stop & rare words =======")
-
-
-if __name__ == '__main__':
-    # TODO: make these global variables shared conf
-    CORPUS_CLEANED_PATH = 'data/corpus.cleaned/'
-    CORPUS_PATH = 'data/corpus/'
-    DATA_SETS = ['20ng', 'R8', 'R52', 'ohsumed', 'mr']
-
-    for ds in DATA_SETS:
-        clean_data(data_set_name=ds, rare_count=5)
+    print("[INFO] Cleaned-Corpus Dir='{}'".format(cfg.CORPUS_CLEANED_DIR))
+    print("[INFO] Rare-Count=<{}>".format(rare_count))
+    print("[INFO] ========= CLEANED DATA: Removed rare & stop-words. =========")

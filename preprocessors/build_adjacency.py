@@ -7,8 +7,10 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.spatial.distance import cosine
 
-from common import flatten_nested_iterables
+from common import check_data_set
+from preprocessors.preprocessing_configs import PreProcessingConfigs
 from utils.file_ops import create_dir, check_paths
+from utils.other_utils import flatten_nested_iterables
 
 
 def extract_word_to_doc_ids(docs_of_words: List[List[str]]) -> Dict[str, List[int]]:
@@ -145,19 +147,20 @@ def extract_tf_idf_doc_word_weights(
     return adj_rows, adj_cols, adj_weights
 
 
-def build_adjacency(ds_name: str):
+def build_adjacency(ds_name: str, cfg: PreProcessingConfigs):
     """Build Adjacency Matrix of Doc-Word Heterogeneous Graph"""
 
     # Input Files
-    ds_corpus = CORPUS_DIR + ds_name + ".txt"
-    ds_corpus_vocabulary = CORPUS_VOCABULARY_DIR + ds_name + '.vocab'
-    ds_corpus_train_idx = CORPUS_SPLIT_INDEX_DIR + ds_name + '.train'
-    ds_corpus_test_idx = CORPUS_SPLIT_INDEX_DIR + ds_name + '.test'
+    ds_corpus = cfg.CORPUS_SHUFFLED_DIR + ds_name + ".txt"
+    ds_corpus_vocabulary = cfg.CORPUS_SHUFFLED_VOCAB_DIR + ds_name + '.vocab'
+    ds_corpus_train_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.train'
+    ds_corpus_test_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.test'
 
-    # Check Paths
+    # Checkers
+    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.DATA_SETS)
     check_paths(ds_corpus, ds_corpus_vocabulary, ds_corpus_train_idx, ds_corpus_test_idx)
 
-    create_dir(dir_path=CORPUS_ADJACENCY_DIR, overwrite=False)
+    create_dir(dir_path=cfg.CORPUS_SHUFFLED_ADJACENCY_DIR, overwrite=False)
 
     docs_of_words = [line.split() for line in open(file=ds_corpus)]
     vocab = open(ds_corpus_vocabulary).read().splitlines()  # Extract Vocabulary.
@@ -170,8 +173,8 @@ def build_adjacency(ds_name: str):
     # Extract word-word weights
     rows, cols, weights = extract_pmi_word_weights(windows_of_words, word_to_id, vocab, train_size)
     # As an alternative, use cosine similarity of word vectors as weights:
-    ds_corpus_word_vectors = CORPUS_WORD_VECTORS_DIR + ds_name + '.word_vectors'
-    rows, cols, weights = extract_cosine_similarity_word_weights(vocab, train_size, ds_corpus_word_vectors)
+    #   ds_corpus_word_vectors = cfg.CORPUS_WORD_VECTORS_DIR + ds_name + '.word_vectors'
+    #   rows, cols, weights = extract_cosine_similarity_word_weights(vocab, train_size, ds_corpus_word_vectors)
 
     # Extract word-doc weights
     rows, cols, weights = extract_tf_idf_doc_word_weights(rows, cols, weights, vocab,
@@ -181,17 +184,8 @@ def build_adjacency(ds_name: str):
     adjacency_matrix = csr_matrix((weights, (rows, cols)), shape=(adjacency_len, adjacency_len))
 
     # Dump Adjacency Matrix
-    with open(CORPUS_ADJACENCY_DIR + "/ind.{}.adj".format(ds_name), 'wb') as f:
+    with open(cfg.CORPUS_SHUFFLED_ADJACENCY_DIR + "/ind.{}.adj".format(ds_name), 'wb') as f:
         pickle.dump(adjacency_matrix, f)
 
-
-if __name__ == '__main__':
-    # Pre-Defined Parameters
-    DATA_SETS = ['20ng', 'R8', 'R52', 'ohsumed', 'mr']
-    CORPUS_DIR = 'data/corpus.shuffled/'
-    CORPUS_SPLIT_INDEX_DIR = 'data/corpus.shuffled/split_index/'
-    CORPUS_VOCABULARY_DIR = 'data/corpus.shuffled/vocabulary/'
-    CORPUS_WORD_VECTORS_DIR = 'data/corpus.shuffled/word_vectors/'
-    CORPUS_ADJACENCY_DIR = 'data/corpus.shuffled/adjacency/'
-
-    build_adjacency(ds_name='R8')
+    print("[INFO] Adjacency Dir='{}'".format(cfg.CORPUS_SHUFFLED_ADJACENCY_DIR))
+    print("[INFO] ========= EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix. =========")
