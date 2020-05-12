@@ -11,7 +11,7 @@ import torch.nn as nn
 
 import numpy as np
 
-from utils.utils import *
+from utils.other_utils import *
 from models.gcn import GCN
 from models.mlp import MLP
 
