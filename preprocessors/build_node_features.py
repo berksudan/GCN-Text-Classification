@@ -6,6 +6,8 @@ from typing import List, Dict, MutableMapping, Tuple, Union
 import numpy as np
 from scipy.sparse import csr_matrix
 
+from common import check_data_set
+from preprocessors.preprocessing_configs import PreProcessingConfigs
 from utils.file_ops import check_paths, create_dir
 
 WORD_VECTORS_TYPE = MutableMapping[str, np.ndarray]  # word -> word-vector, words are ordered with respect to vocabulary
@@ -142,18 +144,19 @@ def dump_node_features(directory: str, ds: str, node_features_dict: Dict[str, Un
             pkl.dump(node_feature_matrix, file)
 
 
-def build_node_features(ds_name: str, train_ratio: float = 1.0, use_predefined_word_vectors: bool = False):
+def build_node_features(ds_name: str, train_ratio: float, use_predefined_word_vectors: bool, cfg: PreProcessingConfigs):
     # Input files for building node features
-    ds_corpus = CORPUS_DIR + ds_name + '.txt'
-    ds_corpus_meta = CORPUS_META_DIR + ds_name + '.meta'
-    ds_corpus_vocabulary = CORPUS_VOCABULARY_DIR + ds_name + '.vocab'
-    ds_corpus_train_idx = CORPUS_SPLIT_INDEX_DIR + ds_name + '.train'
-    ds_corpus_test_idx = CORPUS_SPLIT_INDEX_DIR + ds_name + '.test'
+    ds_corpus = cfg.CORPUS_SHUFFLED_DIR + ds_name + '.txt'
+    ds_corpus_meta = cfg.CORPUS_SHUFFLED_META_DIR + ds_name + '.meta'
+    ds_corpus_vocabulary = cfg.CORPUS_SHUFFLED_VOCAB_DIR + ds_name + '.vocab'
+    ds_corpus_train_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.train'
+    ds_corpus_test_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.test'
 
     # Output directory of node features
-    dir_corpus_node_features = CORPUS_NODE_FEATURES_DIR + "/" + ds_name
+    dir_corpus_node_features = cfg.CORPUS_SHUFFLED_NODE_FEATURES_DIR + "/" + ds_name
 
-    # Check paths if exists
+    # Checkers
+    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.DATA_SETS)
     check_paths(ds_corpus, ds_corpus_meta, ds_corpus_vocabulary)
     check_paths(ds_corpus_train_idx, ds_corpus_train_idx)
 
@@ -167,7 +170,8 @@ def build_node_features(ds_name: str, train_ratio: float = 1.0, use_predefined_w
 
     # Extract word_vectors and word_embedding_dimension
     if use_predefined_word_vectors:
-        ds_corpus_word_vectors = CORPUS_WORD_VECTORS_DIR + ds_name + '.word_vectors'  # Alternative: 'glove.6B.300d.txt'
+        ds_corpus_word_vectors = cfg.CORPUS_SHUFFLED_WORD_VECTORS_DIR + ds_name + '.word_vectors'
+        # ds_corpus_word_vectors =  'glove.6B.300d.txt'  # Alternatively, you can use GLOVE word-embeddings
         word_vectors, word_emb_dim = load_word_to_word_vectors(path=ds_corpus_word_vectors)
     else:
         word_vectors, word_emb_dim = OrderedDict(), 300  # todo: parametrize
@@ -194,18 +198,7 @@ def build_node_features(ds_name: str, train_ratio: float = 1.0, use_predefined_w
     node_feature_matrices = {"x": x, "y": y, "tx": tx, "ty": ty, "allx": allx, "ally": ally}
     dump_node_features(directory=dir_corpus_node_features, ds=ds_name, node_features_dict=node_feature_matrices)
 
-    print(x.shape, y.shape, tx.shape, ty.shape, allx.shape, ally.shape)
-
-
-if __name__ == '__main__':
-    # Pre-Defined Parameters
-    DATA_SETS = ['20ng', 'R8', 'R52', 'ohsumed', 'mr']
-    CORPUS_DIR = 'data/corpus.shuffled/'
-    CORPUS_META_DIR = 'data/corpus.shuffled/meta/'
-    CORPUS_SPLIT_INDEX_DIR = 'data/corpus.shuffled/split_index/'
-    CORPUS_VOCABULARY_DIR = 'data/corpus.shuffled/vocabulary/'
-    CORPUS_WORD_VECTORS_DIR = 'data/corpus.shuffled/word_vectors/'
-
-    CORPUS_NODE_FEATURES_DIR = 'data/corpus.shuffled/node_features/'
-
-    build_node_features(ds_name='R8', train_ratio=0.90)
+    print("[INFO] x.shape=   {},\t y.shape=   {}".format(x.shape, y.shape))
+    print("[INFO] tx.shape=  {},\t ty.shape=  {}".format(tx.shape, ty.shape))
+    print("[INFO] allx.shape={},\t ally.shape={}".format(allx.shape, ally.shape))
+    print("[INFO] ========= EXTRACTED NODE FEATURES: x, y, tx, ty, allx, ally. =========")
