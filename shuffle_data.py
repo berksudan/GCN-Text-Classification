@@ -2,7 +2,7 @@ import random
 from typing import List, Tuple
 
 from clean_data import check_data_set  # todo: check_dataset to commons
-from file_ops_utils import create_dir, write_iterable_to_file, check_paths_exists
+from utils.file_ops import create_dir, write_iterable_to_file, check_paths
 
 
 def load_corpus_meta(corpus_meta_path: str) -> Tuple[List[str], List[str], List[str]]:
@@ -24,7 +24,7 @@ def shuffle(ds_name: str):
 
     # Checkers
     check_data_set(data_set_name=ds_name, all_data_set_names=DATA_SETS)
-    check_paths_exists(ds_corpus, ds_corpus_meta, ds_corpus_cleaned)
+    check_paths(ds_corpus, ds_corpus_meta, ds_corpus_cleaned)
 
     # Create dirs if not exist
     create_dir(CORPUS_SHUFFLED_DIR, overwrite=False)
