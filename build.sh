@@ -19,6 +19,5 @@ python -m pip3 install --upgrade pip
 pip --version
 
 # Install dependencies
-
 pip3 install -I nltk numpy networkx scipy 
-pip3 install -I sklearn  
+pip3 install -I sklearn torch
