@@ -4,7 +4,7 @@ from shutil import rmtree
 from typing import List, Set
 
 from common import extract_word_counts, check_data_set
-from preprocessors.preprocessing_configs import PreProcessingConfigs
+from preprocessors.configs import PreProcessingConfigs
 from utils.file_ops import create_dir, write_iterable_to_file, check_paths
 
 
@@ -57,14 +57,14 @@ def glue_lines(lines_of_words: List[List[str]], glue_str: str, with_strip: bool)
 
 
 def clean_data(ds_name: str, rare_count: int, cfg: PreProcessingConfigs):
-    corpus_path = cfg.CORPUS_DIR + ds_name + cfg.DATA_SET_EXTENSION
-    ds_corpus_cleaned = cfg.CORPUS_CLEANED_DIR + ds_name + cfg.DATA_SET_EXTENSION
+    corpus_path = cfg.corpus_dir + ds_name + cfg.data_set_extension
+    ds_corpus_cleaned = cfg.corpus_cleaned_dir + ds_name + cfg.data_set_extension
 
     # Checkers
-    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.DATA_SETS)
+    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
     check_paths(corpus_path)
 
-    create_dir(dir_path=cfg.CORPUS_CLEANED_DIR, overwrite=False)
+    create_dir(dir_path=cfg.corpus_cleaned_dir, overwrite=False)
     docs_of_words = [clean_str(line.strip().decode('latin1')).split() for line in open(corpus_path, 'rb')]
     word_counts = extract_word_counts(docs_of_words=docs_of_words)
     stop_words = retrieve_stop_words(language='english')
@@ -74,6 +74,6 @@ def clean_data(ds_name: str, rare_count: int, cfg: PreProcessingConfigs):
     docs_of_words = glue_lines(lines_of_words=docs_of_words, glue_str=' ', with_strip=True)
 
     write_iterable_to_file(an_iterable=docs_of_words, file_path=ds_corpus_cleaned, file_mode='w')
-    print("[INFO] Cleaned-Corpus Dir='{}'".format(cfg.CORPUS_CLEANED_DIR))
+    print("[INFO] Cleaned-Corpus Dir='{}'".format(cfg.corpus_cleaned_dir))
     print("[INFO] Rare-Count=<{}>".format(rare_count))
     print("[INFO] ========= CLEANED DATA: Removed rare & stop-words. =========")

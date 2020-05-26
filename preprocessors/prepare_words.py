@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from common import check_data_set
-from preprocessors.preprocessing_configs import PreProcessingConfigs
+from preprocessors.configs import PreProcessingConfigs
 from utils.file_ops import write_iterable_to_file, create_dir, check_paths
 
 
@@ -44,19 +44,19 @@ def extract_vocabulary(docs_of_words: Iterable[List[str]]) -> List[str]:
 
 
 def prepare_words(ds_name: str, cfg: PreProcessingConfigs):
-    ds_corpus = cfg.CORPUS_SHUFFLED_DIR + ds_name + cfg.DATA_SET_EXTENSION
+    ds_corpus = cfg.corpus_shuffled_dir + ds_name + cfg.data_set_extension
 
     # Checkers
-    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.DATA_SETS)
+    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
     check_paths(ds_corpus)
 
-    # Create Output directories
-    create_dir(dir_path=cfg.CORPUS_SHUFFLED_VOCAB_DIR, overwrite=False)
-    create_dir(dir_path=cfg.CORPUS_SHUFFLED_WORD_VECTORS_DIR, overwrite=False)
+    # Create output directories
+    create_dir(dir_path=cfg.corpus_shuffled_vocab_dir, overwrite=False)
+    create_dir(dir_path=cfg.corpus_shuffled_word_vectors_dir, overwrite=False)
 
-    ds_corpus_vocabulary = cfg.CORPUS_SHUFFLED_VOCAB_DIR + ds_name + '.vocab'
-    ds_corpus_word_vectors = cfg.CORPUS_SHUFFLED_WORD_VECTORS_DIR + ds_name + '.word_vectors'
-    # ###################################################3
+    ds_corpus_vocabulary = cfg.corpus_shuffled_vocab_dir + ds_name + '.vocab'
+    ds_corpus_word_vectors = cfg.corpus_shuffled_word_vectors_dir + ds_name + '.word_vectors'
+    # ###################################################
 
     # Build vocabulary
     docs_of_words_generator = (line.split() for line in open(ds_corpus))
@@ -72,17 +72,6 @@ def prepare_words(ds_name: str, cfg: PreProcessingConfigs):
     word_to_word_vectors_dict = OrderedDict((word, vec.tolist()) for word, vec in zip(vocabulary, word_vectors))
     pickle.dump(obj=word_to_word_vectors_dict, file=open(ds_corpus_word_vectors, mode='wb'))
 
-    print("[INFO] Vocabulary Dir='{}'".format(cfg.CORPUS_SHUFFLED_VOCAB_DIR))
-    print("[INFO] Word-Vector Dir='{}'".format(cfg.CORPUS_SHUFFLED_WORD_VECTORS_DIR))
+    print("[INFO] Vocabulary Dir='{}'".format(cfg.corpus_shuffled_vocab_dir))
+    print("[INFO] Word-Vector Dir='{}'".format(cfg.corpus_shuffled_word_vectors_dir))
     print("[INFO] ========= PREPARED WORDS: Vocabulary & word-vectors extracted. =========")
-
-    # if __name__ == '__main__':
-    # Pre-Defined Parameters
-    # DATA_SETS = ['20ng', 'R8', 'R52', 'ohsumed', 'mr']
-    # CORPUS_DIR = '../data/corpus.shuffled/'
-    #
-    # CORPUS_VOCABULARY_DIR = '../data/corpus.shuffled/vocabulary/'
-    # CORPUS_WORD_VECTORS_DIR = '../data/corpus.shuffled/word_vectors/'
-    #
-    # for data_set_name in DATA_SETS:
-    #     prepare_words(ds_name=data_set_name)

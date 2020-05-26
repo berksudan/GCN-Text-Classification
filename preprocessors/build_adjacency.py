@@ -7,10 +7,9 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.spatial.distance import cosine
 
-from common import check_data_set
-from preprocessors.preprocessing_configs import PreProcessingConfigs
+from common import check_data_set, flatten_nested_iterables
+from preprocessors.configs import PreProcessingConfigs
 from utils.file_ops import create_dir, check_paths
-from utils.other_utils import flatten_nested_iterables
 
 
 def extract_word_to_doc_ids(docs_of_words: List[List[str]]) -> Dict[str, List[int]]:
@@ -150,17 +149,17 @@ def extract_tf_idf_doc_word_weights(
 def build_adjacency(ds_name: str, cfg: PreProcessingConfigs):
     """Build Adjacency Matrix of Doc-Word Heterogeneous Graph"""
 
-    # Input Files
-    ds_corpus = cfg.CORPUS_SHUFFLED_DIR + ds_name + ".txt"
-    ds_corpus_vocabulary = cfg.CORPUS_SHUFFLED_VOCAB_DIR + ds_name + '.vocab'
-    ds_corpus_train_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.train'
-    ds_corpus_test_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.test'
+    # input files
+    ds_corpus = cfg.corpus_shuffled_dir + ds_name + ".txt"
+    ds_corpus_vocabulary = cfg.corpus_shuffled_vocab_dir + ds_name + '.vocab'
+    ds_corpus_train_idx = cfg.corpus_shuffled_split_index_dir + ds_name + '.train'
+    ds_corpus_test_idx = cfg.corpus_shuffled_split_index_dir + ds_name + '.test'
 
-    # Checkers
-    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.DATA_SETS)
+    # checkers
+    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
     check_paths(ds_corpus, ds_corpus_vocabulary, ds_corpus_train_idx, ds_corpus_test_idx)
 
-    create_dir(dir_path=cfg.CORPUS_SHUFFLED_ADJACENCY_DIR, overwrite=False)
+    create_dir(dir_path=cfg.corpus_shuffled_adjacency_dir, overwrite=False)
 
     docs_of_words = [line.split() for line in open(file=ds_corpus)]
     vocab = open(ds_corpus_vocabulary).read().splitlines()  # Extract Vocabulary.
@@ -184,8 +183,8 @@ def build_adjacency(ds_name: str, cfg: PreProcessingConfigs):
     adjacency_matrix = csr_matrix((weights, (rows, cols)), shape=(adjacency_len, adjacency_len))
 
     # Dump Adjacency Matrix
-    with open(cfg.CORPUS_SHUFFLED_ADJACENCY_DIR + "/ind.{}.adj".format(ds_name), 'wb') as f:
+    with open(cfg.corpus_shuffled_adjacency_dir + "/ind.{}.adj".format(ds_name), 'wb') as f:
         pickle.dump(adjacency_matrix, f)
 
-    print("[INFO] Adjacency Dir='{}'".format(cfg.CORPUS_SHUFFLED_ADJACENCY_DIR))
+    print("[INFO] Adjacency Dir='{}'".format(cfg.corpus_shuffled_adjacency_dir))
     print("[INFO] ========= EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix. =========")

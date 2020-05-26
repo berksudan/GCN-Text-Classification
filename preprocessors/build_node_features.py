@@ -7,7 +7,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from common import check_data_set
-from preprocessors.preprocessing_configs import PreProcessingConfigs
+from preprocessors.configs import PreProcessingConfigs
 from utils.file_ops import check_paths, create_dir
 
 WORD_VECTORS_TYPE = MutableMapping[str, np.ndarray]  # word -> word-vector, words are ordered with respect to vocabulary
@@ -144,19 +144,20 @@ def dump_node_features(directory: str, ds: str, node_features_dict: Dict[str, Un
             pkl.dump(node_feature_matrix, file)
 
 
-def build_node_features(ds_name: str, train_ratio: float, use_predefined_word_vectors: bool, cfg: PreProcessingConfigs):
-    # Input files for building node features
-    ds_corpus = cfg.CORPUS_SHUFFLED_DIR + ds_name + '.txt'
-    ds_corpus_meta = cfg.CORPUS_SHUFFLED_META_DIR + ds_name + '.meta'
-    ds_corpus_vocabulary = cfg.CORPUS_SHUFFLED_VOCAB_DIR + ds_name + '.vocab'
-    ds_corpus_train_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.train'
-    ds_corpus_test_idx = cfg.CORPUS_SHUFFLED_SPLIT_INDEX_DIR + ds_name + '.test'
+def build_node_features(ds_name: str, validation_ratio: float, use_predefined_word_vectors: bool,
+                        cfg: PreProcessingConfigs):
+    # input files for building node features
+    ds_corpus = cfg.corpus_shuffled_dir + ds_name + '.txt'
+    ds_corpus_meta = cfg.corpus_shuffled_meta_dir + ds_name + '.meta'
+    ds_corpus_vocabulary = cfg.corpus_shuffled_vocab_dir + ds_name + '.vocab'
+    ds_corpus_train_idx = cfg.corpus_shuffled_split_index_dir + ds_name + '.train'
+    ds_corpus_test_idx = cfg.corpus_shuffled_split_index_dir + ds_name + '.test'
 
-    # Output directory of node features
-    dir_corpus_node_features = cfg.CORPUS_SHUFFLED_NODE_FEATURES_DIR + "/" + ds_name
+    # output directory of node features
+    dir_corpus_node_features = cfg.corpus_shuffled_node_features_dir + "/" + ds_name
 
-    # Checkers
-    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.DATA_SETS)
+    # checkers
+    check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
     check_paths(ds_corpus, ds_corpus_meta, ds_corpus_vocabulary)
     check_paths(ds_corpus_train_idx, ds_corpus_train_idx)
 
@@ -165,12 +166,12 @@ def build_node_features(ds_name: str, train_ratio: float, use_predefined_word_ve
 
     # Adjust train size, for different training rates, for example: use 90% of training set
     real_train_size = len(open(ds_corpus_train_idx).readlines())
-    adjusted_train_size = ceil(real_train_size * train_ratio)
+    adjusted_train_size = ceil(real_train_size * (1.0 - validation_ratio))
     test_size = len(open(ds_corpus_test_idx).readlines())
 
     # Extract word_vectors and word_embedding_dimension
     if use_predefined_word_vectors:
-        ds_corpus_word_vectors = cfg.CORPUS_SHUFFLED_WORD_VECTORS_DIR + ds_name + '.word_vectors'
+        ds_corpus_word_vectors = cfg.corpus_shuffled_word_vectors_dir + ds_name + '.word_vectors'
         # ds_corpus_word_vectors =  'glove.6B.300d.txt'  # Alternatively, you can use GLOVE word-embeddings
         word_vectors, word_emb_dim = load_word_to_word_vectors(path=ds_corpus_word_vectors)
     else:
