@@ -1,7 +1,10 @@
-# Our extra ignored files
+# Ignore garbage file
+garbage
+
+# Ignore IDE-specific files
 .idea
 
-# ignore old data files
+# Ignore old data files
 data.old
 
 # Ignore Cached Files
