@@ -1,6 +1,3 @@
-# Ignore garbage file
-garbage
-
 # Ignore IDE-specific files
 .idea
 

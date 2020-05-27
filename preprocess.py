@@ -7,7 +7,7 @@ from preprocessors.shuffle_data import shuffle_data
 
 # Create pre-processing configs
 conf = PreProcessingConfigs()
-conf.data_sets = ['20ng', 'R8', 'R52', 'ohsumed', 'mr', 'cora']
+conf.data_sets = ['20ng', 'R8', 'R52', 'ohsumed', 'mr', 'cora', 'citeseer', 'pubmed']
 conf.data_set_extension = '.txt'
 conf.corpus_dir = 'data/corpus/'
 conf.corpus_meta_dir = 'data/corpus/meta/'
@@ -22,8 +22,8 @@ conf.corpus_shuffled_node_features_dir = 'data/corpus.shuffled/node_features/'
 conf.build()
 
 # Start pre-processing
-clean_data(ds_name='R52', rare_count=5, cfg=conf)
-shuffle_data(ds_name='R52', cfg=conf)
-prepare_words(ds_name='R52', cfg=conf)
-build_node_features(ds_name='R52', validation_ratio=0.10, use_predefined_word_vectors=False, cfg=conf)
-build_adjacency(ds_name='R52', cfg=conf)
+clean_data(ds_name='citeseer', rare_count=5, cfg=conf)
+shuffle_data(ds_name='citeseer', cfg=conf)
+prepare_words(ds_name='citeseer', cfg=conf)
+build_node_features(ds_name='citeseer', validation_ratio=0.10, use_predefined_word_vectors=False, cfg=conf)
+build_adjacency(ds_name='citeseer', cfg=conf)
