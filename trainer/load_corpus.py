@@ -4,18 +4,21 @@ import numpy as np
 import scipy as sp
 from scipy.sparse.linalg.eigen.arpack import eigsh
 
+from trainer.prepare_matrices import normalize_adj
+
 """
 Loads input corpus from gcn/data directory
 
-ind.dataset_str.x => the feature vectors of the training docs as scipy.sparse.csr.csr_matrix object;
-ind.dataset_str.tx => the feature vectors of the test docs as scipy.sparse.csr.csr_matrix object;
-ind.dataset_str.allx => the feature vectors of both labeled and unlabeled training docs/words
-    (a superset of ind.dataset_str.x) as scipy.sparse.csr.csr_matrix object;
-ind.dataset_str.y => the one-hot labels of the labeled training docs as numpy.ndarray object;
-ind.dataset_str.ty => the one-hot labels of the test docs as numpy.ndarray object;
-ind.dataset_str.ally => the labels for instances in ind.dataset_str.allx as numpy.ndarray object;
-ind.dataset_str.adj => adjacency matrix of word/doc nodes as scipy.sparse.csr.csr_matrix object;
-ind.dataset_str.train.index => the indices of training docs in original doc list.
+ind.data_name.x => the feature
+ vectors of the training docs as scipy.sparse.csr.csr_matrix object;
+ind.data_name.tx => the feature vectors of the test docs as scipy.sparse.csr.csr_matrix object;
+ind.data_name.allx => the feature vectors of both labeled and unlabeled training docs/words
+    (a superset of ind.data_name.x) as scipy.sparse.csr.csr_matrix object;
+ind.data_name.y => the one-hot labels of the labeled training docs as numpy.ndarray object;
+ind.data_name.ty => the one-hot labels of the test docs as numpy.ndarray object;
+ind.data_name.ally => the labels for instances in ind.data_name.allx as numpy.ndarray object;
+ind.data_name.adj => adjacency matrix of word/doc nodes as scipy.sparse.csr.csr_matrix object;
+data_name.train => the indices of training docs in original doc list.
 
 All objects above must be saved using python pickle module.
 """
@@ -54,8 +57,6 @@ def sparse_to_tuple(sparse_mx):
         sparse_mx = to_tuple(sparse_mx)
 
     return sparse_mx
-
-
 
 
 def construct_feed_dict(features, support, labels, labels_mask, placeholders):

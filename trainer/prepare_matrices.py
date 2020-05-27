@@ -67,15 +67,15 @@ def prepare_matrices(features, adj, model_name: str, chebyshev_max_degree: int):
         support = [preprocess_adj(adj)]
         num_supports = 1
         model_func = GCN
-    # elif model_name == 'gcn_cheby':
-    #     print_log("Calculating Chebyshev polynomials up to order {}...".format(chebyshev_max_degree))
-    #     support = chebyshev_polynomials(adj, chebyshev_max_degree)
-    #     num_supports = 1 + chebyshev_max_degree
-    #     model_func = GCN
-    # elif model_name == 'dense':
-    #     support = [preprocess_adj(adj)]  # Not used
-    #     num_supports = 1
-    #     model_func = MLP
+    elif model_name == 'gcn_cheby':
+        print_log("Calculating Chebyshev polynomials up to order {}...".format(chebyshev_max_degree))
+        support = chebyshev_polynomials(adj, chebyshev_max_degree)
+        num_supports = 1 + chebyshev_max_degree
+        model_func = GCN
+    elif model_name == 'dense':
+        support = [preprocess_adj(adj)]  # Not used
+        num_supports = 1
+        model_func = MLP
     else:
         raise ValueError('Invalid argument for model: ' + str(model_name))
 
