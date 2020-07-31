@@ -2,7 +2,7 @@
 
 # Change current directory to project directory. 
 CURRENT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
-cd $CURRENT_PATH 
+cd "$CURRENT_PATH" 
 
 # Create virtual environment directory
 python3 -m venv venv/
