@@ -1,16 +1,45 @@
 # Text Categorization Using GCN
 Inzva AI Projects #4, Text Categorization Using GCN
-
+![Showcase Cover with Photos](docs/pics/showcase_cover_with_photos.jpeg)
 
 ## Build
 It is applicable for only Linux distros. You can update the commands and use the equivalent ones in other distros (Mac, Windows, etc.)
 
 Executing ```buid.sh``` will create a new _virtual environment_ in the project folder and install dependencies into that. Run the following command to build: 
-```console
-bash build.sh
+```bash
+bash build.sh 
 ```
 
-Be sure that your computer is connected to internet. I can take a while to download dependendencies. 
+Be sure that your computer is connected to internet. It can take a while to download and install the dependendencies.
+
+## Run
+Available Datasets:
+1. 20ng
+2. R8
+3. R52
+4. ohsumed
+5. mr
+6. cora
+7. citeseer
+8. pubmed
+
+### 1. Preprocess
+```bash
+venv/bin/python3 preprocess.py <DATASET_NAME>
+```
+**Example:**
+```bash
+venv/bin/python3 preprocess.py R8
+```
+
+### 2. Train
+```bash
+venv/bin/python3 train.py <DATASET_NAME>
+```
+**Example:**
+```bash
+venv/bin/python3 train.py R8
+```
 
 ## Contributors
 - *Berk Sudan*, [GitHub](https://github.com/berksudan), [LinkedIn](https://linkedin.com/in/berksudan/)
