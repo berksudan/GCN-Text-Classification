@@ -2,6 +2,9 @@
 Inzva AI Projects #4, Text Categorization Using GCN
 ![Showcase Cover with Photos](docs/pics/showcase_cover_with_photos.jpeg)
 
+## Abstract
+Our project aims to tackle text classification problem with novel approaches Graph Convolutional Networks and Graph Attention Networks using Deep Learning algorithms and Natural Language Processing Techniques.
+
 ## Build
 It is applicable for only Linux distros. You can update the commands and use the equivalent ones in other distros (Mac, Windows, etc.)
 
@@ -23,7 +26,7 @@ Available Datasets:
 7. citeseer
 8. pubmed
 
-### 1. Preprocess
+### Preprocess
 ```bash
 venv/bin/python3 preprocess.py <DATASET_NAME>
 ```
@@ -32,7 +35,7 @@ venv/bin/python3 preprocess.py <DATASET_NAME>
 venv/bin/python3 preprocess.py R8
 ```
 
-### 2. Train
+### Train
 ```bash
 venv/bin/python3 train.py <DATASET_NAME>
 ```
@@ -56,6 +59,3 @@ venv/bin/python3 train.py R8
 ### Repos
 + https://github.com/Diego999/pyGAT
 + https://github.com/tkipf/pygcn
-
-### Data Resources
-+ 
