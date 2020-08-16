@@ -6,13 +6,10 @@ Inzva AI Projects #4, Text Categorization Using GCN
 Our project aims to tackle text classification problem with novel approaches Graph Convolutional Networks and Graph Attention Networks using Deep Learning algorithms and Natural Language Processing Techniques.
 
 ## Build
-It is applicable for only Linux distros. You can update the commands and use the equivalent ones in other distros (Mac, Windows, etc.)
-
-Executing ```buid.sh``` will create a new _virtual environment_ in the project folder and install dependencies into that. Run the following command to build: 
+It is applicable for only Linux distros. You can update the commands and use the equivalent ones in other distros (Mac, Windows, etc.) Executing ```buid.sh``` will create a new _virtual environment_ in the project folder and install dependencies into that. Run the following command to build: 
 ```bash
 bash build.sh 
 ```
-
 Be sure that your computer is connected to internet. It can take a while to download and install the dependendencies.
 
 ## Run
@@ -26,23 +23,17 @@ Available Datasets:
 7. citeseer
 8. pubmed
 
-### Preprocess
+**Preprocess:**
 ```bash
 venv/bin/python3 preprocess.py <DATASET_NAME>
 ```
-**Example:**
-```bash
-venv/bin/python3 preprocess.py R8
-```
+*Example:* ```venv/bin/python3 preprocess.py R8```
 
-### Train
+**Train:**
 ```bash
 venv/bin/python3 train.py <DATASET_NAME>
 ```
-**Example:**
-```bash
-venv/bin/python3 train.py R8
-```
+*Example:* ```venv/bin/python3 train.py R8```
 
 ## Contributors
 - *Berk Sudan*, [GitHub](https://github.com/berksudan), [LinkedIn](https://linkedin.com/in/berksudan/)
